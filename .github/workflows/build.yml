@@ -19,7 +19,6 @@ jobs:
       - name: Ekstrak project
         run: |
           unzip -q CatatanPengeluaranAndroid.zip -d project
-          find project -name settings.gradle.kts
 
       - name: Siapkan Java
         uses: actions/setup-java@v4
@@ -32,17 +31,34 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Cari project
         run: |
           PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
 
-          if [ "$PROJECT_DIR" = "." ] || [ -z "$PROJECT_DIR" ]; then
-            echo "Project Android tidak ditemukan"
-            exit 1
-          fi
+      - name: Samakan Java dan Kotlin
+        run: |
+          python3 - "$PROJECT_DIR/app/build.gradle.kts" <<'PY'
+          import sys
+          p = sys.argv[1]
+          s = open(p).read()
+          s = s.replace(
+              '    buildFeatures { compose = true }',
+              '''    compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+              buildFeatures { compose = true }'''
+          )
+          open(p, 'w').write(s)
+          PY
 
+      - name: Build APK
+        run: |
           gradle -p "$PROJECT_DIR" assembleDebug
-
           mkdir -p output
           cp "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" output/Dompetku.apk
 
@@ -51,3 +67,4 @@ jobs:
         with:
           name: Dompetku-APK
           path: output/Dompetku.apk
+          
