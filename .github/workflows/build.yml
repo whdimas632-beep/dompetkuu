@@ -19,6 +19,7 @@ jobs:
       - name: Ekstrak project
         run: |
           unzip -q CatatanPengeluaranAndroid.zip -d project
+          find project -name settings.gradle.kts
 
       - name: Siapkan Java
         uses: actions/setup-java@v4
@@ -31,5 +32,23 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build AP
-      
+      - name: Build APK
+        run: |
+          PROJECT_DIR=$(dirname "$(find project -name settings.gradle.kts -print -quit)")
+
+          if [ "$PROJECT_DIR" = "." ] || [ -z "$PROJECT_DIR" ]; then
+            echo "Project Android tidak ditemukan"
+            exit 1
+          fi
+
+          gradle -p "$PROJECT_DIR" assembleDebug
+
+          mkdir -p output
+          cp "$PROJECT_DIR/app/build/outputs/apk/debug/app-debug.apk" output/Dompetku.apk
+
+      - name: Simpan APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Dompetku-APK
+          path: output/Dompetku.apk
+          
