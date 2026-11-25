@@ -31,11 +31,4 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
-        run: gradle -p project assembleDebug
-
-      - name: Simpan APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Dompetku-APK
-          path: project/app/build/outputs/apk/debug/app-debug.apk
+      - name: Build AP
